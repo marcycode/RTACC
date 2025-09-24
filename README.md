@@ -489,12 +489,6 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 
 
-### **Getting Help**
-- 📧 **Email**: support@rtacc-system.com
-- 💬 **Discord**: [RTACC Community](https://discord.gg/rtacc)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/RTACC/issues)
-- 📖 **Wiki**: [Documentation Wiki](https://github.com/yourusername/RTACC/wiki)
-
 ---
 
 
@@ -518,8 +512,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ## 📞 **Contact**
 
-**Project Maintainer**: [Your Name](mailto:nmarcelin123@gmail.com)  
-**Website**: [https://rtacc-system.com](https://rtacc-system.com)  
+**Project Maintainer**: [Nodshley Marcelin](mailto:nmarcelin123@gmail.com)  
 **GitHub**: [https://github.com/marcycode/RTACC](https://github.com/yourusername/RTACC)  
 
 *⭐ Star this repository if you found it helpful!*
