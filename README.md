@@ -487,32 +487,7 @@ pip uninstall torch torchvision torchaudio
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
-#### **API Connection Failures**
-```bash
-# Test individual APIs
-python quick_weather_test.py
-python test_reddit_data.py
 
-# Check internet connection and API limits
-```
-
-#### **Memory Issues**
-```python
-# Reduce batch size
-BATCH_SIZE = 16  # Instead of 32
-
-# Enable gradient checkpointing
-model.gradient_checkpointing_enable()
-```
-
-### **Performance Optimization**
-```bash
-# Monitor GPU usage
-nvidia-smi -l 1
-
-# Profile code performance
-python -m cProfile -o profile.prof dashboard.py
-```
 
 ### **Getting Help**
 - 📧 **Email**: support@rtacc-system.com
@@ -523,11 +498,7 @@ python -m cProfile -o profile.prof dashboard.py
 ---
 
 
-### **Technical Blog Posts**
-- [Building GPU-Accelerated Crisis Detection](https://blog.nvidia.com/rtacc-crisis-ai)
-- [Streamlit + CUDA: Real-time AI Dashboards](https://blog.streamlit.io/rtacc-case-study)
 
----
 
 ## 🙏 **Acknowledgments**
 
