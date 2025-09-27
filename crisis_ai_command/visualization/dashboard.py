@@ -12,6 +12,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data_pipeline.data_sources import RealTimeDataCollector
 from data_pipeline.processors import CUDADataProcessor
+# Import new climate visualization components
+try:
+    from data_pipeline.climate_sources import ClimateDataCollector
+    from visualization.climate_dashboard import ClimateCrisisMap
+    CLIMATE_FEATURES_AVAILABLE = True
+except ImportError:
+    CLIMATE_FEATURES_AVAILABLE = False
+    st.warning("⚠️ Climate visualization features not available. Create climate_sources.py and climate_dashboard.py to enable.")
 
 class DynamicCrisisDashboard:
     def __init__(self):
@@ -19,6 +27,11 @@ class DynamicCrisisDashboard:
         self.current_location = "Washington, DC, USA"  # Default location
         self.collector = None
         self.location_coordinates = {}
+        
+        # Initialize climate components if available
+        if CLIMATE_FEATURES_AVAILABLE:
+            self.climate_collector = ClimateDataCollector()
+            self.climate_map = ClimateCrisisMap()
         
     def set_location(self, location):
         """Update the current location and reinitialize data collector"""
@@ -33,7 +46,7 @@ class DynamicCrisisDashboard:
     
     def _update_location_coordinates(self, location):
         """Get coordinates for the location to center the map"""
-        # Common city coordinates - you can expand this or use a geocoding API
+        # Common city coordinates - following RTACC location database pattern
         coordinates_db = {
             "Washington, DC, USA": {"lat": 38.9072, "lon": -77.0369, "zoom": 10},
             "New York, NY, USA": {"lat": 40.7128, "lon": -74.0060, "zoom": 10},
@@ -48,7 +61,10 @@ class DynamicCrisisDashboard:
             "Miami, FL, USA": {"lat": 25.7617, "lon": -80.1918, "zoom": 10},
             "Seattle, WA, USA": {"lat": 47.6062, "lon": -122.3321, "zoom": 10},
             "Denver, CO, USA": {"lat": 39.7392, "lon": -104.9903, "zoom": 10},
-            "San Francisco, CA, USA": {"lat": 37.7749, "lon": -122.4194, "zoom": 10}
+            "San Francisco, CA, USA": {"lat": 37.7749, "lon": -122.4194, "zoom": 10},
+            # Add high-risk climate locations for testing
+            "Houston, TX, USA": {"lat": 29.7604, "lon": -95.3698, "zoom": 10},  # Flood risk
+            "Phoenix, AZ, USA": {"lat": 33.4484, "lon": -112.0740, "zoom": 10}   # Extreme heat
         }
         
         # Default to a general view if location not found
@@ -93,7 +109,7 @@ def create_location_aware_dashboard():
     with st.sidebar:
         st.header("🌍 Location Settings")
         
-        # Location selector
+        # Location selector with high-risk climate zones
         location_options = [
             "Washington, DC, USA",
             "New York, NY, USA", 
@@ -103,10 +119,13 @@ def create_location_aware_dashboard():
             "Seattle, WA, USA",
             "Denver, CO, USA",
             "San Francisco, CA, USA",
+            "Houston, TX, USA",    # Flood-prone
+            "Phoenix, AZ, USA",    # Extreme heat/fire risk
             "London, UK",
             "Paris, France",
             "Berlin, Germany",
             "Tokyo, Japan",
+            "Yellowknife,NT,Canada",
             "Sydney, Australia",
             "Toronto, Canada"
         ]
@@ -142,6 +161,19 @@ def create_location_aware_dashboard():
             st.write(f"📐 Lat: {coords['lat']:.4f}")
             st.write(f"📐 Lon: {coords['lon']:.4f}")
         
+        # Climate features toggle
+        if CLIMATE_FEATURES_AVAILABLE:
+            st.divider()
+            st.subheader("🌪️ Climate Features")
+            show_climate = st.checkbox("🌦️ Show Weather Overlays", value=True)
+            show_flood = st.checkbox("🌊 Show Flood Zones", value=True)
+            show_fire = st.checkbox("🔥 Show Fire Risk", value=True)
+            
+            # Store in session state
+            st.session_state.show_climate = show_climate
+            st.session_state.show_flood = show_flood  
+            st.session_state.show_fire = show_fire
+        
         # Auto-refresh toggle
         auto_refresh = st.checkbox("🔄 Auto-refresh (30s)", value=True)
         
@@ -159,6 +191,7 @@ def create_location_aware_dashboard():
         <div style="text-align: center; padding: 10px; background-color: #f0f2f6; border-radius: 10px;">
             <h3>🌍 Active Monitoring Location</h3>
             <h2 style="color: #1f77b4;">{dashboard.current_location}</h2>
+            {f'<p>🌪️ Climate Features: {"ENABLED" if CLIMATE_FEATURES_AVAILABLE else "DISABLED"}</p>' if True else ''}
         </div>
         """, unsafe_allow_html=True)
     
@@ -190,20 +223,35 @@ def create_location_aware_dashboard():
             </div>
             """, unsafe_allow_html=True)
             
-            # Create tabs for different views
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🗺️ Map View", "📈 Analytics", "⚙️ Resources"])
+            # Create tabs for different views - enhanced with climate tab
+            tab_names = ["📊 Overview", "🗺️ Map View", "📈 Analytics", "⚙️ Resources"]
+            if CLIMATE_FEATURES_AVAILABLE:
+                tab_names.insert(2, "🌪️ Climate")
+                tab1, tab2, tab3, tab4, tab5 = st.tabs(tab_names)
+            else:
+                tab1, tab2, tab3, tab4 = st.tabs(tab_names)
             
             with tab1:
-                create_overview_tab(latest_data, crisis_result, dashboard.current_location)
+                create_enhanced_overview_tab(latest_data, crisis_result, dashboard.current_location)
             
             with tab2:
-                create_dynamic_map_tab(latest_data, crisis_result, dashboard)
+                if CLIMATE_FEATURES_AVAILABLE:
+                    create_enhanced_climate_map_tab(latest_data, crisis_result, dashboard)
+                else:
+                    create_dynamic_map_tab(latest_data, crisis_result, dashboard)
             
-            with tab3:
-                create_analytics_tab(latest_data, crisis_result, dashboard.current_location)
-            
-            with tab4:
-                create_resources_tab(crisis_result, dashboard.current_location)
+            if CLIMATE_FEATURES_AVAILABLE:
+                with tab3:
+                    create_climate_analysis_tab(latest_data, crisis_result, dashboard)
+                with tab4:
+                    create_analytics_tab(latest_data, crisis_result, dashboard.current_location)
+                with tab5:
+                    create_resources_tab(crisis_result, dashboard.current_location)
+            else:
+                with tab3:
+                    create_analytics_tab(latest_data, crisis_result, dashboard.current_location)
+                with tab4:
+                    create_resources_tab(crisis_result, dashboard.current_location)
                 
         except Exception as e:
             st.error(f"⚠️ Error loading data for {dashboard.current_location}: {str(e)}")
@@ -221,8 +269,8 @@ def create_location_aware_dashboard():
         time.sleep(30)
         st.rerun()
 
-def create_overview_tab(data, crisis_result, location):
-    """Create overview tab with location-specific information"""
+def create_enhanced_overview_tab(data, crisis_result, location):
+    """Enhanced overview tab with climate metrics"""
     col1, col2 = st.columns(2)
     
     with col1:
@@ -257,11 +305,31 @@ def create_overview_tab(data, crisis_result, location):
             fig.update_layout(height=300)
             st.plotly_chart(fig, use_container_width=True)
             
-            # Weather details for location
+            # Enhanced weather details with climate indicators
             st.write(f"**Current Weather in {location}:**")
-            st.write(f"🌡️ Temperature: {latest_weather.get('temperature', 'N/A')}°C")
-            st.write(f"💨 Wind Speed: {latest_weather.get('wind_speed', 'N/A')} km/h")
-            st.write(f"💧 Humidity: {latest_weather.get('humidity', 'N/A')}%")
+            temp = latest_weather.get('temperature', 0)
+            precip = latest_weather.get('precipitation', 0)
+            wind = latest_weather.get('wind_speed', 0)
+            humidity = latest_weather.get('humidity', 50)
+            
+            # Climate risk indicators following RTACC scoring thresholds
+            temp_warning = "🔥" if temp > 35 else "⚠️" if temp > 30 else ""
+            precip_warning = "🌊" if precip > 10 else "💧" if precip > 5 else ""
+            wind_warning = "💨" if wind > 25 else ""
+            
+            st.write(f"🌡️ Temperature: {temp}°C {temp_warning}")
+            st.write(f"💧 Precipitation: {precip}mm {precip_warning}")
+            st.write(f"💨 Wind Speed: {wind} km/h {wind_warning}")
+            st.write(f"💧 Humidity: {humidity}%")
+            
+            # Climate threat assessment
+            fire_risk = (temp > 30 and humidity < 30 and wind > 15)
+            flood_risk = (precip > 5)
+            
+            if fire_risk:
+                st.warning("🔥 **FIRE RISK CONDITIONS DETECTED**")
+            if flood_risk:
+                st.warning("🌊 **FLOOD RISK CONDITIONS DETECTED**")
         
         else:
             st.warning(f"No weather data available for {location}")
@@ -304,6 +372,170 @@ def create_overview_tab(data, crisis_result, location):
         
         else:
             st.warning(f"No traffic data available for {location}")
+
+def create_enhanced_climate_map_tab(data, crisis_result, dashboard):
+    """Enhanced map tab with climate overlays"""
+    st.subheader(f"🌪️ Enhanced Climate Crisis Map - {dashboard.current_location}")
+    
+    if not CLIMATE_FEATURES_AVAILABLE:
+        st.error("Climate features not available - missing climate visualization components")
+        return
+    
+    # Get coordinates for map centering (RTACC pattern)
+    coords = dashboard.location_coordinates
+    if not coords:
+        st.error("Unable to get coordinates for the selected location")
+        return
+    
+    coordinates = (coords['lat'], coords['lon'])
+    
+    # Create enhanced climate visualization
+    climate_fig = dashboard.climate_map.create_enhanced_crisis_map(
+        coordinates, data, crisis_result
+    )
+    
+    st.plotly_chart(climate_fig, use_container_width=True)
+    
+    # Climate-specific metrics following RTACC metric pattern
+    col1, col2, col3, col4 = st.columns(4)
+    
+    weather_data = data.get('weather', [{}])[-1] if data.get('weather') else {}
+    
+    with col1:
+        temp = weather_data.get('temperature', 0)
+        feels_like = weather_data.get('feels_like', temp)
+        st.metric(
+            "🌡️ Temperature", 
+            f"{temp:.1f}°C",
+            delta=f"{feels_like - temp:.1f}°C feels"
+        )
+    
+    with col2:
+        precip = weather_data.get('precipitation', 0)
+        st.metric(
+            "🌧️ Precipitation", 
+            f"{precip:.1f}mm",
+            delta="High Risk" if precip > 5 else "Normal"
+        )
+    
+    with col3:
+        wind = weather_data.get('wind_speed', 0)
+        st.metric(
+            "💨 Wind Speed",
+            f"{wind:.1f} m/s",
+            delta="⚠️" if wind > 15 else "✅"
+        )
+    
+    with col4:
+        temp = weather_data.get('temperature', 0)
+        humidity = weather_data.get('humidity', 100)
+        fire_danger = "HIGH" if temp > 30 and humidity < 30 else "LOW"
+        st.metric(
+            "🔥 Fire Danger",
+            fire_danger,
+            delta="CRITICAL" if fire_danger == "HIGH" and wind > 20 else None
+        )
+
+def create_climate_analysis_tab(data, crisis_result, dashboard):
+    """New climate analysis tab with detailed environmental data"""
+    st.subheader(f"🌪️ Climate Risk Analysis - {dashboard.current_location}")
+    
+    if not CLIMATE_FEATURES_AVAILABLE:
+        st.error("Climate analysis not available - missing climate components")
+        return
+    
+    weather_data = data.get('weather', [{}])[-1] if data.get('weather') else {}
+    coordinates = (dashboard.location_coordinates['lat'], dashboard.location_coordinates['lon'])
+    
+    # Get climate overlay data
+    try:
+        climate_overlays = dashboard.climate_collector.get_climate_overlays(coordinates, weather_data)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**🌊 Flood Risk Assessment:**")
+            
+            if 'flood_zones' in climate_overlays:
+                flood_data = climate_overlays['flood_zones']
+                max_risk = flood_data['max_risk']
+                
+                # Flood risk gauge
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=max_risk,
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Flood Risk Level"},
+                    gauge={
+                        'axis': {'range': [None, 1]},
+                        'bar': {'color': "blue"},
+                        'steps': [
+                            {'range': [0, 0.3], 'color': "lightblue"},
+                            {'range': [0.3, 0.7], 'color': "yellow"},
+                            {'range': [0.7, 1], 'color': "red"}
+                        ]
+                    }
+                ))
+                fig.update_layout(height=250)
+                st.plotly_chart(fig, use_container_width=True)
+                
+                st.write(f"Max Flood Risk: {max_risk:.3f}")
+                st.write(f"Precipitation: {weather_data.get('precipitation', 0):.1f}mm")
+                
+            else:
+                st.info("No significant flood risk detected")
+        
+        with col2:
+            st.write("**🔥 Wildfire Risk Assessment:**")
+            
+            if 'wildfire_zones' in climate_overlays:
+                fire_data = climate_overlays['wildfire_zones']
+                fire_danger = fire_data['fire_danger_index']
+                
+                # Fire risk gauge
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=min(fire_danger/20, 1),  # Normalize to 0-1
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Fire Danger Index"},
+                    gauge={
+                        'axis': {'range': [None, 1]},
+                        'bar': {'color': "orange"},
+                        'steps': [
+                            {'range': [0, 0.3], 'color': "green"},
+                            {'range': [0.3, 0.7], 'color': "yellow"},
+                            {'range': [0.7, 1], 'color': "red"}
+                        ]
+                    }
+                ))
+                fig.update_layout(height=250)
+                st.plotly_chart(fig, use_container_width=True)
+                
+                st.write(f"Fire Danger Index: {fire_danger:.1f}")
+                st.write(f"Temperature: {weather_data.get('temperature', 0):.1f}°C")
+                st.write(f"Humidity: {weather_data.get('humidity', 0):.1f}%")
+                
+            else:
+                st.info("No significant wildfire risk detected")
+        
+        # Weather radar status
+        st.write("**📡 Weather Radar Data:**")
+        radar_layers = climate_overlays.get('radar_layers', {})
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Precipitation Layer", "✅" if 'precipitation' in radar_layers else "❌")
+        with col2:
+            st.metric("Temperature Layer", "✅" if 'temperature' in radar_layers else "❌")
+        with col3:
+            st.metric("Wind Layer", "✅" if 'wind' in radar_layers else "❌")
+        with col4:
+            st.metric("Pressure Layer", "✅" if 'pressure' in radar_layers else "❌")
+            
+    except Exception as e:
+        st.error(f"Error generating climate analysis: {str(e)}")
+
+# ...existing code... (keep all other functions unchanged)
 
 def create_dynamic_map_tab(data, crisis_result, dashboard):
     """Create map tab with dynamic location centering"""
