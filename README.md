@@ -18,8 +18,13 @@ RTACC analyzes **weather conditions**, **traffic patterns**, **social media sent
 ---
 
 ## **Demo**
+<div align="center">
 
-<video controls src="RTACC_Demo.mp4" title="Title"></video>
+![RTACC Demo](RTACC_DEMO.gif)
+
+*GPU-accelerated real-time crisis detection with climate overlays and multi-city monitoring*
+
+</div>
 
 ## 🏗️ **System Architecture**
 
