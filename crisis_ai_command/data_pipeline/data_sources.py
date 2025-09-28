@@ -59,6 +59,7 @@ class RealTimeDataCollector:
             
             
             major_cities = {
+                # Standard locations
                 "washington dc": {"lat": 38.9072, "lon": -77.0369, "country": "USA", "state": "DC", "city": "Washington"},
                 "new york": {"lat": 40.7128, "lon": -74.0060, "country": "USA", "state": "NY", "city": "New York"},
                 "los angeles": {"lat": 34.0522, "lon": -118.2437, "country": "USA", "state": "CA", "city": "Los Angeles"},
@@ -68,7 +69,19 @@ class RealTimeDataCollector:
                 "berlin": {"lat": 52.5200, "lon": 13.4050, "country": "Germany", "state": "Berlin", "city": "Berlin"},
                 "sydney": {"lat": -33.8688, "lon": 151.2093, "country": "Australia", "state": "NSW", "city": "Sydney"},
                 "toronto": {"lat": 43.6532, "lon": -79.3832, "country": "Canada", "state": "Ontario", "city": "Toronto"},
-                "mumbai": {"lat": 19.0760, "lon": 72.8777, "country": "India", "state": "Maharashtra", "city": "Mumbai"}
+                "mumbai": {"lat": 19.0760, "lon": 72.8777, "country": "India", "state": "Maharashtra", "city": "Mumbai"},
+                
+                # Crisis-prone locations
+                "paradise": {"lat": 39.7596, "lon": -121.6219, "country": "USA", "state": "CA", "city": "Paradise"},
+                "new orleans": {"lat": 29.9511, "lon": -90.0715, "country": "USA", "state": "LA", "city": "New Orleans"},
+                "moore": {"lat": 35.3395, "lon": -97.4864, "country": "USA", "state": "OK", "city": "Moore"},
+                "venice": {"lat": 45.4408, "lon": 12.3155, "country": "Italy", "state": "Veneto", "city": "Venice"},
+                "athens": {"lat": 37.9838, "lon": 23.7275, "country": "Greece", "state": "Attica", "city": "Athens"},
+                "reykjavik": {"lat": 64.1466, "lon": -21.9426, "country": "Iceland", "state": "Capital Region", "city": "Reykjavik"},
+                "darwin": {"lat": -12.4634, "lon": 130.8456, "country": "Australia", "state": "NT", "city": "Darwin"},
+                "manila": {"lat": 14.5995, "lon": 120.9842, "country": "Philippines", "state": "NCR", "city": "Manila"},
+                "cape town": {"lat": -33.9249, "lon": 18.4241, "country": "South Africa", "state": "Western Cape", "city": "Cape Town"},
+                "fairbanks": {"lat": 64.8378, "lon": -147.7164, "country": "USA", "state": "AK", "city": "Fairbanks"}
             }
             
             location_key = location.lower().replace(",", "").replace(" usa", "").replace(" us", "").strip()
@@ -154,8 +167,59 @@ class RealTimeDataCollector:
                         # Enhanced risk calculation based on location climate
                         risk_score = 0.0
                         
-                        # Temperature risk (varies by location/season)
-                        if self.location_coords.get("country") in ["Canada", "Russia", "Finland"]:
+                        # Location-specific crisis scenarios
+                        location_name = self.current_location.lower()
+                        
+                        # HIGH RISK CRISIS ZONES - simulate active crisis conditions
+                        if "paradise" in location_name:  # Wildfire crisis
+                            risk_score += 0.8  # Active wildfire conditions
+                            temp = max(temp, 42)  # Extreme heat
+                            wind_speed = max(wind_speed, 35)  # High winds
+                            humidity = min(humidity, 15)  # Very dry
+                        elif "new orleans" in location_name:  # Hurricane/flood risk
+                            risk_score += 0.7  # Hurricane approach
+                            wind_speed = max(wind_speed, 45)  # Hurricane winds
+                            pressure = min(pressure, 950)  # Low pressure system
+                            data['rain'] = {'1h': max(data.get('rain', {}).get('1h', 0), 25)}  # Heavy rain
+                        elif "moore" in location_name:  # Tornado conditions
+                            risk_score += 0.75  # Severe weather
+                            pressure = min(pressure, 960)  # Very low pressure
+                            wind_speed = max(wind_speed, 50)  # Tornado conditions
+                            temp = max(temp, 32)  # Hot conditions
+                        elif "venice" in location_name and "italy" in location_name:  # Flooding
+                            risk_score += 0.6  # Acqua alta conditions
+                            data['rain'] = {'1h': max(data.get('rain', {}).get('1h', 0), 15)}
+                            pressure = min(pressure, 980)  # Storm system
+                        elif "athens" in location_name:  # Wildfire/heat crisis
+                            risk_score += 0.7  # Heat wave + fire risk
+                            temp = max(temp, 45)  # Extreme heat
+                            humidity = min(humidity, 20)  # Very dry
+                            wind_speed = max(wind_speed, 30)  # Fire-spreading winds
+                        elif "reykjavik" in location_name:  # Volcanic activity
+                            risk_score += 0.5  # Volcanic ash/activity
+                            wind_speed = max(wind_speed, 25)  # Ash dispersal
+                        elif "darwin" in location_name:  # Cyclone season
+                            risk_score += 0.65  # Cyclone approach
+                            wind_speed = max(wind_speed, 40)  # Cyclone winds
+                            pressure = min(pressure, 965)  # Low pressure
+                            data['rain'] = {'1h': max(data.get('rain', {}).get('1h', 0), 20)}
+                        elif "manila" in location_name:  # Typhoon risk
+                            risk_score += 0.7  # Typhoon conditions
+                            wind_speed = max(wind_speed, 55)  # Typhoon winds
+                            pressure = min(pressure, 940)  # Very low pressure
+                            data['rain'] = {'1h': max(data.get('rain', {}).get('1h', 0), 30)}
+                        elif "cape town" in location_name:  # Drought/fire risk
+                            risk_score += 0.6  # Fire danger
+                            temp = max(temp, 38)  # Hot and dry
+                            humidity = min(humidity, 25)
+                            wind_speed = max(wind_speed, 28)
+                        elif "fairbanks" in location_name:  # Extreme cold
+                            risk_score += 0.5  # Extreme cold warning
+                            temp = min(temp, -35)  # Dangerous cold
+                            wind_speed = max(wind_speed, 20)  # Wind chill factor
+                        
+                        # Standard temperature risk (varies by location/season)
+                        elif self.location_coords.get("country") in ["Canada", "Russia", "Finland"]:
                             # Cold climate countries
                             if temp < -20 or temp > 30:
                                 risk_score += 0.3
@@ -268,6 +332,8 @@ class RealTimeDataCollector:
                         
             except Exception as e:
                 print(f"⚠️ News collection error: {e}")
+                # Fallback to location-specific crisis simulation
+                self._add_crisis_location_news()
                 
             time.sleep(600)  # 10 minutes
             
@@ -491,27 +557,44 @@ class RealTimeDataCollector:
     def _add_enhanced_traffic_simulation(self):
         """Enhanced traffic simulation as fallback"""
         current_hour = datetime.now().hour
+        location_name = self.current_location.lower()
         
-        if 7 <= current_hour <= 9 or 17 <= current_hour <= 19:
+        # Crisis location traffic scenarios
+        if any(crisis_location in location_name for crisis_location in 
+               ["paradise", "new orleans", "moore", "venice", "athens", "darwin", "manila", "cape town"]):
+            # Crisis areas have severe traffic disruption
+            base_congestion = 0.85  # Very high congestion
+            incident_chance = 0.6   # High incident rate
+        elif current_hour >= 7 and current_hour <= 9 or current_hour >= 17 and current_hour <= 19:
             base_congestion = 0.7
             incident_chance = 0.15
-        elif 22 <= current_hour or current_hour <= 5:
+        elif current_hour >= 22 or current_hour <= 5:
             base_congestion = 0.1
             incident_chance = 0.05
         else:
             base_congestion = 0.4
             incident_chance = 0.08
-            
+        
         city_name = self.location_coords.get("city", "City")
         routes = [f"{city_name}_Route_{i+1}" for i in range(5)]
         
         for route in routes:
+            # Add crisis-specific traffic conditions
+            congestion = max(0, min(1, np.random.normal(base_congestion, 0.2)))
+            incident_detected = np.random.random() < incident_chance
+            
+            # Crisis locations have more severe incidents
+            if any(crisis_location in location_name for crisis_location in 
+                   ["paradise", "new orleans", "moore", "venice", "athens", "darwin", "manila"]):
+                if incident_detected:
+                    congestion = min(1.0, congestion + 0.2)  # Increase congestion for incidents
+            
             traffic_point = {
                 'timestamp': datetime.now(),
                 'location': f"{route}_Sim",
-                'congestion_level': max(0, min(1, np.random.normal(base_congestion, 0.2))),
-                'incident_detected': np.random.random() < incident_chance,
-                'average_speed': max(5, np.random.normal(45 * (1 - base_congestion), 10)),
+                'congestion_level': congestion,
+                'incident_detected': incident_detected,
+                'average_speed': max(5, np.random.normal(45 * (1 - congestion), 10)),
                 'real_data': False
             }
             self.traffic_data.append(traffic_point)
@@ -554,3 +637,79 @@ class RealTimeDataCollector:
             'traffic_real': traffic_real,
             'social_real': social_real
         }
+    
+    def _add_crisis_location_news(self):
+        """Add location-specific crisis news simulation for high-risk areas"""
+        location_name = self.current_location.lower()
+        
+        # Crisis zone news scenarios
+        crisis_news_scenarios = {
+            "paradise": [
+                {"title": "BREAKING: Wildfire spreads rapidly through Paradise area", "severity": 0.9, "type": "wildfire"},
+                {"title": "Evacuation orders issued for Paradise residents", "severity": 0.85, "type": "evacuation"},
+                {"title": "Red flag warning extended due to extreme fire conditions", "severity": 0.7, "type": "fire_warning"}
+            ],
+            "new orleans": [
+                {"title": "Hurricane watch issued for New Orleans metro area", "severity": 0.8, "type": "hurricane"},
+                {"title": "Storm surge warnings as hurricane approaches Gulf Coast", "severity": 0.75, "type": "storm_surge"},
+                {"title": "Emergency shelters opening across New Orleans", "severity": 0.6, "type": "emergency"}
+            ],
+            "moore": [
+                {"title": "Tornado warning issued for Moore and surrounding areas", "severity": 0.85, "type": "tornado"},
+                {"title": "Severe thunderstorm complex developing over Oklahoma", "severity": 0.7, "type": "severe_weather"},
+                {"title": "Emergency sirens activated in Moore", "severity": 0.8, "type": "emergency"}
+            ],
+            "venice": [
+                {"title": "Venice flooding reaches critical levels", "severity": 0.75, "type": "flooding"},
+                {"title": "Acqua alta warning: Historic high tide expected", "severity": 0.7, "type": "flood_warning"},
+                {"title": "St. Mark's Square evacuated due to rising waters", "severity": 0.6, "type": "evacuation"}
+            ],
+            "athens": [
+                {"title": "Extreme heat warning as temperatures soar past 45°C", "severity": 0.8, "type": "heat_wave"},
+                {"title": "Wildfire risk reaches maximum level near Athens", "severity": 0.85, "type": "wildfire"},
+                {"title": "Power grid strain as Athens faces record heat", "severity": 0.6, "type": "infrastructure"}
+            ],
+            "reykjavik": [
+                {"title": "Volcanic activity increases near Reykjavik", "severity": 0.7, "type": "volcanic"},
+                {"title": "Ash cloud warning issued for air travel", "severity": 0.6, "type": "volcanic_ash"},
+                {"title": "Seismic activity detected in Reykjanes Peninsula", "severity": 0.5, "type": "earthquake"}
+            ],
+            "darwin": [
+                {"title": "Cyclone warning issued for Darwin region", "severity": 0.8, "type": "cyclone"},
+                {"title": "Category 3 cyclone approaching Northern Territory", "severity": 0.85, "type": "cyclone"},
+                {"title": "Darwin residents urged to prepare for severe weather", "severity": 0.6, "type": "weather_warning"}
+            ],
+            "manila": [
+                {"title": "Typhoon alert: Super typhoon approaching Manila", "severity": 0.9, "type": "typhoon"},
+                {"title": "Mass evacuations underway in Manila Bay area", "severity": 0.85, "type": "evacuation"},
+                {"title": "Storm surge warning for Manila coastal areas", "severity": 0.8, "type": "storm_surge"}
+            ],
+            "cape town": [
+                {"title": "Extreme fire danger warning for Cape Town region", "severity": 0.8, "type": "wildfire"},
+                {"title": "Water restrictions tightened as drought continues", "severity": 0.6, "type": "drought"},
+                {"title": "Berg winds fuel fire risk across Western Cape", "severity": 0.7, "type": "fire_warning"}
+            ],
+            "fairbanks": [
+                {"title": "Extreme cold warning: Temperatures drop to -40°C", "severity": 0.7, "type": "extreme_cold"},
+                {"title": "Frostbite danger as Arctic air mass settles over Alaska", "severity": 0.75, "type": "cold_warning"},
+                {"title": "Emergency warming centers opened in Fairbanks", "severity": 0.6, "type": "emergency"}
+            ]
+        }
+        
+        # Add crisis news for matching locations
+        for location_key, scenarios in crisis_news_scenarios.items():
+            if location_key in location_name:
+                for scenario in scenarios[:2]:  # Add 2 news items
+                    news_point = {
+                        'timestamp': datetime.now(),
+                        'event_type': scenario['type'],
+                        'severity': scenario['severity'],
+                        'location': self.current_location,
+                        'description': scenario['title'],
+                        'source': 'Crisis Simulation Network',
+                        'url': f'https://crisis-news.sim/{scenario["type"]}',
+                        'real_data': False
+                    }
+                    self.news_data.append(news_point)
+                    print(f"📰 Crisis news ({self.location_coords.get('city', 'Unknown')}): {scenario['type']} - Severity: {scenario['severity']:.2f}")
+                break

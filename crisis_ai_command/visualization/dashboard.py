@@ -48,23 +48,38 @@ class DynamicCrisisDashboard:
         """Get coordinates for the location to center the map"""
         # Common city coordinates - following RTACC location database pattern
         coordinates_db = {
+            # Normal/Low Risk Locations
             "Washington, DC, USA": {"lat": 38.9072, "lon": -77.0369, "zoom": 10},
             "New York, NY, USA": {"lat": 40.7128, "lon": -74.0060, "zoom": 10},
-            "Los Angeles, CA, USA": {"lat": 34.0522, "lon": -118.2437, "zoom": 10},
             "Chicago, IL, USA": {"lat": 41.8781, "lon": -87.6298, "zoom": 10},
             "London, UK": {"lat": 51.5074, "lon": -0.1278, "zoom": 10},
             "Paris, France": {"lat": 48.8566, "lon": 2.3522, "zoom": 10},
-            "Tokyo, Japan": {"lat": 35.6762, "lon": 139.6503, "zoom": 10},
-            "Sydney, Australia": {"lat": -33.8688, "lon": 151.2093, "zoom": 10},
             "Berlin, Germany": {"lat": 52.5200, "lon": 13.4050, "zoom": 10},
             "Toronto, Canada": {"lat": 43.6511, "lon": -79.3470, "zoom": 10},
+            
+            # CURRENT CRISIS ZONES - High Risk Areas
+            "🔥 Paradise, CA, USA": {"lat": 39.7596, "lon": -121.6219, "zoom": 12},        # Camp Fire area
+            "🌊 New Orleans, LA, USA": {"lat": 29.9511, "lon": -90.0715, "zoom": 11},      # Hurricane risk
+            "🌪️ Moore, OK, USA": {"lat": 35.3395, "lon": -97.4864, "zoom": 12},           # Tornado alley
+            "🌊 Venice, Italy": {"lat": 45.4408, "lon": 12.3155, "zoom": 12},              # Flooding crisis
+            "🔥 Athens, Greece": {"lat": 37.9838, "lon": 23.7275, "zoom": 11},             # Wildfire/heat
+            "🌋 Reykjavik, Iceland": {"lat": 64.1466, "lon": -21.9426, "zoom": 10},        # Volcanic activity
+            "🌪️ Darwin, Australia": {"lat": -12.4634, "lon": 130.8456, "zoom": 11},       # Cyclone season
+            "🌊 Manila, Philippines": {"lat": 14.5995, "lon": 120.9842, "zoom": 11},       # Typhoon risk
+            "🔥 Cape Town, South Africa": {"lat": -33.9249, "lon": 18.4241, "zoom": 10},   # Drought/fire
+            "❄️ Fairbanks, AK, USA": {"lat": 64.8378, "lon": -147.7164, "zoom": 10},      # Extreme cold
+            
+            # Moderate Risk Locations
+            "Los Angeles, CA, USA": {"lat": 34.0522, "lon": -118.2437, "zoom": 10},
             "Miami, FL, USA": {"lat": 25.7617, "lon": -80.1918, "zoom": 10},
+            "Houston, TX, USA": {"lat": 29.7604, "lon": -95.3698, "zoom": 10},
+            "Phoenix, AZ, USA": {"lat": 33.4484, "lon": -112.0740, "zoom": 10},
             "Seattle, WA, USA": {"lat": 47.6062, "lon": -122.3321, "zoom": 10},
             "Denver, CO, USA": {"lat": 39.7392, "lon": -104.9903, "zoom": 10},
             "San Francisco, CA, USA": {"lat": 37.7749, "lon": -122.4194, "zoom": 10},
-            # Add high-risk climate locations for testing
-            "Houston, TX, USA": {"lat": 29.7604, "lon": -95.3698, "zoom": 10},  # Flood risk
-            "Phoenix, AZ, USA": {"lat": 33.4484, "lon": -112.0740, "zoom": 10}   # Extreme heat
+            "Tokyo, Japan": {"lat": 35.6762, "lon": 139.6503, "zoom": 10},
+            "Sydney, Australia": {"lat": -33.8688, "lon": 151.2093, "zoom": 10},
+            "Yellowknife, NT, Canada": {"lat": 62.4540, "lon": -114.3718, "zoom": 10}
         }
         
         # Default to a general view if location not found
@@ -111,23 +126,38 @@ def create_location_aware_dashboard():
         
         # Location selector with high-risk climate zones
         location_options = [
+            # Normal/Low Risk Locations
             "Washington, DC, USA",
             "New York, NY, USA", 
-            "Los Angeles, CA, USA",
             "Chicago, IL, USA",
-            "Miami, FL, USA",
-            "Seattle, WA, USA",
-            "Denver, CO, USA",
-            "San Francisco, CA, USA",
-            "Houston, TX, USA",    # Flood-prone
-            "Phoenix, AZ, USA",    # Extreme heat/fire risk
             "London, UK",
             "Paris, France",
             "Berlin, Germany",
-            "Tokyo, Japan",
-            "Yellowknife,NT,Canada",
-            "Sydney, Australia",
-            "Toronto, Canada"
+            "Toronto, Canada",
+            
+            # CURRENT CRISIS ZONES - High Risk Areas
+            "🔥 Paradise, CA, USA",           # Wildfire crisis zone
+            "🌊 New Orleans, LA, USA",        # Hurricane/flood risk
+            "🌪️ Moore, OK, USA",             # Tornado alley
+            "🌊 Venice, Italy",               # Flooding crisis
+            "🔥 Athens, Greece",              # Wildfire/heat crisis
+            "🌋 Reykjavik, Iceland",          # Volcanic activity
+            "🌪️ Darwin, Australia",          # Cyclone season
+            "🌊 Manila, Philippines",         # Typhoon risk
+            "🔥 Cape Town, South Africa",     # Drought/fire risk
+            "❄️ Fairbanks, AK, USA",         # Extreme cold
+            
+            # Moderate Risk Locations  
+            "Los Angeles, CA, USA",          # Fire risk
+            "Miami, FL, USA",                # Hurricane risk
+            "Houston, TX, USA",              # Flood-prone
+            "Phoenix, AZ, USA",              # Extreme heat
+            "Seattle, WA, USA",              # Earthquake risk
+            "Denver, CO, USA",               # Wildfire smoke
+            "San Francisco, CA, USA",        # Earthquake risk
+            "Tokyo, Japan",                  # Earthquake/tsunami
+            "Sydney, Australia",             # Bushfire risk
+            "Yellowknife, NT, Canada"        # Wildfire risk
         ]
         
         selected_location = st.selectbox(
@@ -188,7 +218,7 @@ def create_location_aware_dashboard():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown(f"""
-        <div style="text-align: center; padding: 10px; background-color: #f0f2f6; border-radius: 10px;">
+        <div style="text-align: center; padding: 10px; background-color: #28a745; border-radius: 10px;">
             <h3>🌍 Active Monitoring Location</h3>
             <h2 style="color: #1f77b4;">{dashboard.current_location}</h2>
             {f'<p>🌪️ Climate Features: {"ENABLED" if CLIMATE_FEATURES_AVAILABLE else "DISABLED"}</p>' if True else ''}
