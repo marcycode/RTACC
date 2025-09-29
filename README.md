@@ -64,6 +64,5 @@ RTACC analyzes **weather conditions**, **traffic patterns**, **social media sent
 ## 📞 **Contact**
 
 **Project Maintainer**: [Nodshley Marcelin](mailto:nmarcelin123@gmail.com)  
-**GitHub**: [https://github.com/marcycode/RTACC](https://github.com/yourusername/RTACC)  
 
 *⭐ Star this repository if you found it helpful or if you think it is awesome!!!*
